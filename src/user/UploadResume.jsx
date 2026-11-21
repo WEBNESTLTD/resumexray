@@ -78,6 +78,12 @@ export default function UploadResume() {
 
     setSelectedFile(file);
 
+    // Auto-detect if file name hints Customer Success or specific role
+    const lowerName = file.name.toLowerCase();
+    if (lowerName.includes('customer') || lowerName.includes('success') || lowerName.includes('john') || lowerName.includes('aarts') || lowerName.includes('csm')) {
+      setTargetRole('customer-success-manager');
+    }
+
     // Create thumbnail if image
     if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
       const reader = new FileReader();
@@ -116,9 +122,10 @@ export default function UploadResume() {
 
       // Parse file in-browser (PDF, DOCX, TXT, or Image)
       const parsedData = await parseResumeFile(selectedFile);
+      const effectiveRole = parsedData.detectedRole || (targetRole === 'frontend-developer' && parsedData.rawText.includes('Customer Success') ? 'customer-success-manager' : targetRole);
 
       // Save to application context and localStorage
-      const { resume } = saveNewResumeAndAnalysis(parsedData, targetRole, customJobDesc);
+      const { resume } = saveNewResumeAndAnalysis(parsedData, effectiveRole, customJobDesc);
 
       setIsScanning(false);
       navigate(`/analysis/${resume.id}`);

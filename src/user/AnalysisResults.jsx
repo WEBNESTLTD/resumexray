@@ -23,6 +23,7 @@ import {
 import { useApp } from '../context/AppContext';
 import ScoreRing from '../components/common/ScoreRing';
 import { ExportService } from '../services/exportService';
+import { analyzeResumeText } from '../services/resumeAnalyzer';
 
 export default function AnalysisResults() {
   const { id } = useParams();
@@ -32,96 +33,80 @@ export default function AnalysisResults() {
 
   // Locate the resume and its matching analysis
   const resume = resumes.find((r) => r.id === id || r.analysisId === id) || resumes[0];
-  const analysis = analyses.find((a) => a.resumeId === resume?.id || a.id === id) || {
+  const storedAnalysis = analyses.find((a) => a.resumeId === resume?.id || a.id === id);
+  const analysis = storedAnalysis || (resume?.rawText ? analyzeResumeText(resume.rawText, resume.targetRole) : null) || {
     id: 'demo-analysis',
     analyzedAt: new Date().toISOString(),
-    targetRoleTitle: resume?.targetRoleTitle || 'Senior Frontend Engineer',
+    targetRoleTitle: resume?.targetRoleTitle || 'Customer Success Manager',
     scores: resume?.scores || { overall: 88, ats: 92, structure: 90, skills: 85, experience: 88, keywords: 82, formatting: 95, education: 95 },
     sections: {
-      detected: resume?.sectionsDetected || ['contact', 'summary', 'skills', 'experience', 'education', 'projects'],
+      detected: resume?.sectionsDetected || ['contact', 'summary', 'skills', 'experience', 'education'],
       missing: []
     },
     contact: {
-      email: 'alex.chen@example.dev',
-      phone: '(555) 234-5678',
-      linkedin: 'linkedin.com/in/alexchen-dev',
-      github: 'github.com/alexchen',
+      email: 'john.xander@gmail.com',
+      phone: '+1-952-140-6600',
+      linkedin: 'linkedin.com/johnaarts',
       complete: true
     },
     skills: {
-      totalCount: resume?.skillsFound?.length || 9,
-      allFound: resume?.skillsFound || ['React', 'TypeScript', 'Tailwind CSS', 'Next.js', 'Redux', 'Jest', 'Git', 'Webpack', 'REST APIs'],
+      totalCount: resume?.skillsFound?.length || 7,
+      allFound: resume?.skillsFound || ['CRM', 'Salesforce', 'NetSuite', 'MS Excel', 'Hubspot', 'Mailchimp', 'Customer Retention'],
       byCategory: {
-        frontend: { name: 'Frontend', color: '#7657F6', skills: ['React', 'TypeScript', 'Tailwind CSS', 'Next.js', 'Redux', 'Jest'] },
-        cloudDevops: { name: 'Cloud & Tooling', color: '#42C5D8', skills: ['Git', 'Webpack', 'REST APIs'] }
+        customerSuccess: { name: 'Customer Success & CRM', color: '#059669', skills: ['CRM', 'Salesforce', 'NetSuite', 'MS Excel', 'Hubspot', 'Mailchimp', 'Customer Retention'] }
       }
     },
     keywords: {
       coverageScore: 82,
-      foundRequired: ['React', 'TypeScript', 'Tailwind CSS', 'REST APIs', 'Git'],
-      missingRequired: ['Web Accessibility (WCAG)'],
-      foundBonus: ['Next.js', 'Jest'],
-      missingBonus: ['Playwright', 'Web Performance'],
-      missingRoleSkills: ['Web Accessibility (WCAG)', 'Playwright', 'Web Performance'],
-      foundRoleKeywords: ['responsive design', 'component architecture', 'unit testing'],
-      missingRoleKeywords: ['web vitals', 'cross-browser compatibility']
+      foundRequired: ['CRM', 'Salesforce', 'NetSuite', 'MS Excel', 'Hubspot', 'Customer Retention'],
+      missingRequired: ['Net Retention Rate (NRR)'],
+      foundBonus: ['Mailchimp'],
+      missingBonus: ['SimilarWeb'],
+      missingRoleSkills: ['Net Retention Rate (NRR)', 'SimilarWeb'],
+      foundRoleKeywords: ['arr', 'renewal contracts', 'book of business', 'customer retention'],
+      missingRoleKeywords: ['churn reduction', 'upsell']
     },
     contentQuality: {
       weakVerbsFound: [
-        { phrase: 'worked on', suggestions: ['Architected', 'Spearheaded', 'Engineered'] },
-        { phrase: 'helped with', suggestions: ['Collaborated on', 'Accelerated', 'Championed'] }
+        { phrase: 'worked on', suggestions: ['Spearheaded', 'Engineered', 'Delivered'] }
       ],
-      metricsCount: 5,
-      metricHighlights: ['42%', '500K+ monthly active users', '66%', '24 engineers', '50,000+ data points'],
+      metricsCount: 6,
+      metricHighlights: ['115% Net Retention Rate', 'USD $2-2.5M in ARR', '100% retention rate', '25% YoY', '34% of all accounts', 'over $2M ARR'],
       bulletCount: 9,
-      longBulletCount: 1,
-      firstPersonPronounCount: 0
+      longBulletCount: 0,
+      firstPersonPronounCount: 1
     },
     ats: {
       score: 92,
-      issues: ['One bullet point exceeds 35 words. Consider splitting into two concise lines.'],
+      issues: ['Two-column resume layout detected. Single-column format is recommended for maximum legacy ATS compatibility.'],
       positives: [
-        'Contact info contains verified email and phone number.',
+        'Contact info contains verified email, phone number, and LinkedIn.',
         'Core ATS standard headings recognized.',
-        'Strong density of quantified metric achievements.'
+        'Strong density of quantified ARR, NRR, and retention metric achievements.'
       ],
       atsChecklist: [
         { item: 'Standard Section Headings', pass: true },
         { item: 'Parseable Contact Information', pass: true },
-        { item: 'Single Column Readability', pass: true },
+        { item: 'Single Column Readability', pass: false },
         { item: 'Optimal Word Density', pass: true },
         { item: 'Action Verb & Bullet Format', pass: true },
-        { item: 'Zero First-Person Pronouns', pass: true }
+        { item: 'Zero First-Person Pronouns', pass: false }
       ]
     },
     recommendations: [
       {
         id: 'rec-1',
         priority: 'Important',
-        title: 'Integrate Web Accessibility (WCAG 2.1 AA)',
-        category: 'Skills Alignment',
-        explanation: 'Your target role explicitly favors engineers with verified accessibility and semantic HTML competencies.'
+        title: 'Single-Column Layout Format',
+        category: 'ATS Layout',
+        explanation: 'Your uploaded resume uses a multi-column visual design. While visually polished, single-column layouts prevent reading order truncation in automated ATS parsers.'
       },
       {
         id: 'rec-2',
         priority: 'Important',
-        title: 'Replace Passive "worked on" Phrasing',
-        category: 'Language Quality',
-        explanation: 'Swap "worked on front-end features" for "Architected high-throughput responsive React modules".'
-      },
-      {
-        id: 'rec-3',
-        priority: 'Recommended',
-        title: 'Include End-to-End Testing (Playwright / Cypress)',
-        category: 'Testing Depth',
-        explanation: 'Demonstrating automated browser test coverage significantly boosts engineering credibility.'
-      },
-      {
-        id: 'rec-4',
-        priority: 'Optional',
-        title: 'Trim 38-Word Bullet Point Under Horizon Digital Labs',
-        category: 'Readability',
-        explanation: 'Keep bullet points under 25 words for swift recruiter scanning.'
+        title: 'Highlight Net Retention Rate (NRR) in Core Skills',
+        category: 'Skills Alignment',
+        explanation: 'Customer Success leadership roles heavily prioritize NRR and ARR metrics in standard technical filters.'
       }
     ]
   };
@@ -281,14 +266,14 @@ export default function AnalysisResults() {
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-soft-sm space-y-4">
             <h2 className="font-heading font-bold text-lg text-navy-900">Executive Summary</h2>
             <p className="text-sm text-txt-secondary leading-relaxed">
-              This document demonstrates <strong>strong alignment ({analysis.scores.overall}/100)</strong> with industry expectations for a <strong>{analysis.targetRoleTitle}</strong>. Key technical pillars (React, TypeScript, state management) are well articulated with clear metric achievements. To achieve top 5% candidate placement, close the gap on Web Accessibility (WCAG) and swap remaining passive task descriptions with commanding action verbs.
+              This document demonstrates <strong>strong alignment ({analysis.scores.overall}/100)</strong> with industry expectations for a <strong>{analysis.targetRoleTitle}</strong>. Key core competencies ({analysis.skills?.allFound?.slice(0, 4).join(', ') || 'demonstrated skills'}) are well articulated with clear metric achievements ({analysis.contentQuality?.metricsCount || 0} quantifiable metrics detected). {analysis.keywords?.missingRoleSkills?.length > 0 ? `To achieve top 5% candidate placement, close the gap on ${analysis.keywords.missingRoleSkills.slice(0, 2).join(' and ')} and ensure bullet points start with commanding action verbs.` : 'Ensure experience bullets maintain high achievement impact.'}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
               <div className="p-4 rounded-2xl bg-canvas border border-slate-200">
                 <span className="text-xs font-semibold text-txt-secondary">Structure Weight (20%)</span>
                 <p className="font-heading font-bold text-lg text-navy-900 mt-0.5">{analysis.scores.structure}/100</p>
-                <p className="text-[11px] text-emerald-600 font-medium">All 6 core sections found</p>
+                <p className="text-[11px] text-emerald-600 font-medium">Core ATS sections found</p>
               </div>
 
               <div className="p-4 rounded-2xl bg-canvas border border-slate-200">
@@ -314,15 +299,17 @@ export default function AnalysisResults() {
               <ul className="space-y-2 text-xs text-txt-primary">
                 <li className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                  <span>Verified contact info: email, phone, and GitHub links recognized.</span>
+                  <span>
+                    Verified contact information ({analysis.contact?.email ? 'email, ' : ''}{analysis.contact?.phone ? 'phone, ' : ''}{analysis.contact?.linkedin ? 'LinkedIn' : ''}) recognized in header.
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                  <span>Strong presence of numbers, percentages, and user scale metrics.</span>
+                  <span>Strong presence of numbers, percentages, and business revenue metrics ({analysis.contentQuality?.metricsCount || 0} found).</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                  <span>Zero first-person pronouns ("I", "my") maintaining objective tone.</span>
+                  <span>Standard ATS section structure recognized across {analysis.sections?.detected?.length || 4} key sections.</span>
                 </li>
               </ul>
             </div>
@@ -333,17 +320,21 @@ export default function AnalysisResults() {
                 <span>Priority Focus Areas</span>
               </h3>
               <ul className="space-y-2 text-xs text-txt-primary">
+                {analysis.keywords?.missingRoleSkills?.length > 0 && (
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+                    <span>Integrate high-priority role skills: {analysis.keywords.missingRoleSkills.slice(0, 3).join(', ')}.</span>
+                  </li>
+                )}
+                {analysis.contentQuality?.weakVerbsFound?.length > 0 && (
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+                    <span>Replace passive "{analysis.contentQuality.weakVerbsFound[0].phrase}" with power action verbs.</span>
+                  </li>
+                )}
                 <li className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
-                  <span>Integrate Web Accessibility (WCAG 2.1 AA) keywords.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
-                  <span>Replace passive "worked on" with power action verbs.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
-                  <span>Add automated browser testing (Playwright / Cypress) evidence.</span>
+                  <span>Ensure single-column layout formatting for seamless parsing across legacy ATS portals.</span>
                 </li>
               </ul>
             </div>

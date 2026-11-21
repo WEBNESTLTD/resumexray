@@ -79,8 +79,14 @@ export function AppProvider({ children }) {
   };
 
   const saveNewResumeAndAnalysis = (fileData, targetRoleKey, customJobDesc = '') => {
+    // Determine effective role: prioritize fileData.detectedRole if targetRole was default
+    let roleToUse = targetRoleKey;
+    if (fileData.detectedRole && (!targetRoleKey || targetRoleKey === 'frontend-developer')) {
+      roleToUse = fileData.detectedRole;
+    }
+
     // 1. Analyze text
-    const analysisResult = analyzeResumeText(fileData.rawText, targetRoleKey, customJobDesc);
+    const analysisResult = analyzeResumeText(fileData.rawText, roleToUse, customJobDesc);
 
     // 2. Prepare resume object
     const newResume = {
@@ -89,7 +95,7 @@ export function AppProvider({ children }) {
       fileSize: fileData.fileSize,
       fileType: fileData.fileType,
       uploadedAt: new Date().toISOString(),
-      targetRole: targetRoleKey,
+      targetRole: analysisResult.targetRoleKey || roleToUse,
       targetRoleTitle: analysisResult.targetRoleTitle,
       scores: analysisResult.scores,
       sectionsDetected: analysisResult.sections.detected,

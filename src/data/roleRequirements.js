@@ -1,5 +1,18 @@
 // Target roles with core requirements, keywords, and typical experience thresholds
 export const ROLE_REQUIREMENTS = {
+  'customer-success-manager': {
+    title: 'Customer Success Manager',
+    level: 'Senior',
+    category: 'Customer Operations & SaaS Sales',
+    requiredSkills: ['CRM', 'Salesforce', 'NetSuite', 'MS Excel', 'Hubspot', 'Customer Retention', 'Customer Relationship', 'Account Management'],
+    bonusSkills: ['Mailchimp', 'SimilarWeb', 'Negotiation and presentation', 'Net Retention Rate (NRR)', 'ARR', 'Competitive Intelligence'],
+    keywords: [
+      'net retention rate', 'arr', 'renewal contracts', 'customer retention', 'book of business',
+      'churn reduction', 'client base', 'customer lifetime value', 'stakeholder management', 'upsell', 'nrr'
+    ],
+    experienceYears: '4 - 7 years',
+    description: 'Drive customer retention, Net Retention Rate (NRR), account growth, churn reduction, and renewal expansions across SaaS enterprise portfolios.'
+  },
   'frontend-developer': {
     title: 'Frontend Developer',
     level: 'Mid-Senior',

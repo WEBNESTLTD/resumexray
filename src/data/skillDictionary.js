@@ -19,6 +19,16 @@ export const SKILL_CATEGORIES = {
       'Apache Kafka', 'RESTful Architecture', 'GraphQL APIs', 'WebSocket', 'API Gateway', 'Authentication (OAuth/JWT)'
     ]
   },
+  customerSuccess: {
+    name: 'Customer Success & CRM',
+    color: '#059669',
+    skills: [
+      'CRM', 'Salesforce', 'NetSuite', 'MS Excel', 'Hubspot', 'Mailchimp', 'SimilarWeb',
+      'Customer Retention', 'Net Retention Rate (NRR)', 'ARR', 'Customer Relationship',
+      'Account Management', 'SaaS Renewals', 'Cross-selling & Upselling', 'Churn Reduction',
+      'Customer Outreach', 'Client Service', 'Competitive Intelligence', 'Negotiation'
+    ]
+  },
   database: {
     name: 'Databases & Storage',
     color: '#10B981',
@@ -70,7 +80,7 @@ export const SKILL_CATEGORIES = {
     skills: [
       'Problem Solving', 'Strategic Thinking', 'Written & Verbal Communication', 'Team Leadership',
       'Collaboration', 'Mentorship', 'Conflict Resolution', 'Time Management', 'Critical Thinking',
-      'Client Presentation', 'Adaptability', 'Continuous Learning'
+      'Client Presentation', 'Adaptability', 'Continuous Learning', 'Negotiation and presentation', 'Research'
     ]
   }
 };

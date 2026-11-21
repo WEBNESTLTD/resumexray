@@ -1,6 +1,38 @@
 import { SKILL_CATEGORIES, ALL_SKILLS, ACTION_VERB_SUGGESTIONS } from '../data/skillDictionary';
 import { ROLE_REQUIREMENTS } from '../data/roleRequirements';
 
+export function detectRoleFromText(text) {
+  const lower = (text || '').toLowerCase();
+  if (lower.includes('customer success') || lower.includes('client success') || lower.includes('account manager') || lower.includes('retention rate') || lower.includes('nrr')) {
+    return 'customer-success-manager';
+  }
+  if (lower.includes('frontend') || lower.includes('react') || lower.includes('javascript') || lower.includes('html5')) {
+    return 'frontend-developer';
+  }
+  if (lower.includes('full stack') || lower.includes('fullstack')) {
+    return 'fullstack-engineer';
+  }
+  if (lower.includes('backend') || lower.includes('django') || lower.includes('spring boot') || lower.includes('microservices')) {
+    return 'backend-developer';
+  }
+  if (lower.includes('data analyst') || lower.includes('tableau') || lower.includes('power bi')) {
+    return 'data-analyst';
+  }
+  if (lower.includes('ui/ux') || lower.includes('figma') || lower.includes('product designer')) {
+    return 'ui-ux-designer';
+  }
+  if (lower.includes('machine learning') || lower.includes('deep learning') || lower.includes('pytorch')) {
+    return 'ai-ml-engineer';
+  }
+  if (lower.includes('devops') || lower.includes('kubernetes') || lower.includes('terraform')) {
+    return 'devops-cloud-engineer';
+  }
+  if (lower.includes('product manager') || lower.includes('scrum') || lower.includes('sprint planning')) {
+    return 'product-manager';
+  }
+  return null;
+}
+
 /**
  * Resume Analysis Engine
  * Evaluates raw resume text across:
@@ -18,7 +50,14 @@ export function analyzeResumeText(rawText, targetRoleKey = 'frontend-developer',
   const words = text.toLowerCase().match(/\b[a-z0-9+#.-]+\b/g) || [];
   const wordCount = words.length;
 
-  const targetRole = ROLE_REQUIREMENTS[targetRoleKey] || ROLE_REQUIREMENTS['frontend-developer'];
+  // Auto-detect role if default or mismatched
+  const autoRole = detectRoleFromText(text);
+  let resolvedRoleKey = targetRoleKey;
+  if (autoRole && (!targetRoleKey || targetRoleKey === 'frontend-developer')) {
+    resolvedRoleKey = autoRole;
+  }
+
+  const targetRole = ROLE_REQUIREMENTS[resolvedRoleKey] || ROLE_REQUIREMENTS['customer-success-manager'] || ROLE_REQUIREMENTS['frontend-developer'];
 
   // A. Section Detection
   const detectedSections = detectSections(text);
@@ -77,7 +116,7 @@ export function analyzeResumeText(rawText, targetRoleKey = 'frontend-developer',
   return {
     id: `analysis-${Date.now()}`,
     analyzedAt: new Date().toISOString(),
-    targetRoleKey,
+    targetRoleKey: resolvedRoleKey,
     targetRoleTitle: targetRole.title,
     wordCount,
     scores: {
