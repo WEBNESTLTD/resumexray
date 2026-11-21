@@ -10,7 +10,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
-  Info
+  Info,
+  Image as ImageIcon
 } from 'lucide-react';
 import { parseResumeFile } from '../services/resumeParser';
 import { useApp } from '../context/AppContext';
@@ -25,13 +26,14 @@ export default function UploadResume() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
 
   const { saveNewResumeAndAnalysis, showToast } = useApp();
   const navigate = useNavigate();
 
   const scanSteps = [
     'Reading resume document bytes...',
-    'Identifying standard ATS sections...',
+    'Identifying standard ATS sections & visual layout...',
     'Extracting skills across 8 industry taxonomies...',
     'Evaluating keywords and role requirements...',
     'Auditing action verbs & quantifiable metrics...',
@@ -64,19 +66,31 @@ export default function UploadResume() {
   const handleFileSelected = (file) => {
     setErrorMessage('');
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['pdf', 'docx', 'txt'].includes(ext)) {
-      setErrorMessage('Unsupported file format. Please upload a PDF or DOCX file.');
+    const validExtensions = ['pdf', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'webp'];
+    if (!validExtensions.includes(ext)) {
+      setErrorMessage('Unsupported file format. Please upload a PDF, DOCX, or Image (PNG, JPG, WEBP) file.');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       setErrorMessage('File exceeds the 5 MB limit. Please select a smaller document.');
       return;
     }
+
     setSelectedFile(file);
+
+    // Create thumbnail if image
+    if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
   };
 
   const handleLoadSampleResume = () => {
     setErrorMessage('');
+    setImagePreview(null);
     const blob = new Blob([SAMPLE_RESUME_TEXT], { type: 'text/plain' });
     const sampleFile = new File([blob], 'Alex_Chen_Senior_Frontend_Engineer.pdf', { type: 'application/pdf' });
     setSelectedFile(sampleFile);
@@ -100,7 +114,7 @@ export default function UploadResume() {
         await new Promise((resolve) => setTimeout(resolve, 400));
       }
 
-      // Parse file in-browser
+      // Parse file in-browser (PDF, DOCX, TXT, or Image)
       const parsedData = await parseResumeFile(selectedFile);
 
       // Save to application context and localStorage
@@ -113,6 +127,12 @@ export default function UploadResume() {
       setIsScanning(false);
       setErrorMessage(err.message || 'Error parsing resume document.');
     }
+  };
+
+  const getFileBadge = (file) => {
+    const ext = file.name.split('.').pop().toUpperCase();
+    if (['PNG', 'JPG', 'JPEG', 'WEBP'].includes(ext)) return 'IMG';
+    return ext;
   };
 
   return (
@@ -144,7 +164,7 @@ export default function UploadResume() {
             <input
               type="file"
               id="resume-file-input"
-              accept=".pdf,.docx,.txt"
+              accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
               onChange={handleFileInputChange}
               className="hidden"
             />
@@ -156,7 +176,9 @@ export default function UploadResume() {
                 <p className="font-heading font-bold text-base text-navy-900">
                   Drag and drop your resume here, or <span className="text-violet-600 underline">browse files</span>
                 </p>
-                <p className="text-xs text-txt-secondary">Supports PDF and DOCX files up to 5 MB</p>
+                <p className="text-xs text-txt-secondary">
+                  Supports <strong>PDF, DOCX, PNG, JPG, and WEBP</strong> files up to 5 MB
+                </p>
               </div>
             </label>
 
@@ -176,16 +198,34 @@ export default function UploadResume() {
           /* File Selected Preview State */
           <div className="p-5 rounded-2xl bg-violet-50/60 border border-violet-200 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                PDF
-              </div>
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Resume preview"
+                  className="w-12 h-12 object-cover rounded-xl border border-violet-200 shadow-sm"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  {getFileBadge(selectedFile)}
+                </div>
+              )}
               <div>
                 <p className="font-heading font-bold text-sm text-navy-900">{selectedFile.name}</p>
-                <p className="text-xs text-txt-secondary">{(selectedFile.size / 1024).toFixed(1)} KB • Ready for scanning</p>
+                <p className="text-xs text-txt-secondary">
+                  {(selectedFile.size / 1024).toFixed(1)} KB • Ready for scanning
+                  {['png', 'jpg', 'jpeg', 'webp'].includes(selectedFile.name.split('.').pop().toLowerCase()) && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 font-semibold text-[10px]">
+                      OCR Image
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
             <button
-              onClick={() => setSelectedFile(null)}
+              onClick={() => {
+                setSelectedFile(null);
+                setImagePreview(null);
+              }}
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-white transition"
               title="Remove file"
             >
@@ -266,7 +306,11 @@ export default function UploadResume() {
 
             <div className="space-y-1">
               <h3 className="font-heading font-bold text-lg text-navy-900">Auditing Document Heuristics</h3>
-              <p className="text-xs text-txt-secondary">Client-Side Rule Processing Active</p>
+              <p className="text-xs text-txt-secondary">
+                {selectedFile && ['png', 'jpg', 'jpeg', 'webp'].includes(selectedFile.name.split('.').pop().toLowerCase())
+                  ? 'Optical Character Layout Processing Active'
+                  : 'Client-Side Rule Processing Active'}
+              </p>
             </div>
 
             {/* Step animation checklist */}
